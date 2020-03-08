@@ -1,0 +1,38 @@
+import org.gradle.internal.jvm.Jvm
+
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+group 'ppanda.sharpie'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+    compile 'com.google.auto.service:auto-service:1.0-rc2'
+    compile 'com.github.javaparser:javaparser-symbol-solver-core:3.15.14'
+    compile 'com.google.auto:auto-common:0.10'
+    compile files(Jvm.current().toolsJar)
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier "sources"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'interface-wrapper'
+            from components.java
+            artifact sourcesJar
+            pom {
+                name = 'Interface Wrapper'
+                description = 'Smart compile time annotation processor to create wrapper of interfaces'
+            }
+        }
+    }
+}
