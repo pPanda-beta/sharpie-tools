@@ -20,6 +20,7 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.10.0'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.23.4'
+    testCompile 'com.google.testing.compile:compile-testing:0.18'
 }
 
 task sourcesJar(type: Jar) {
