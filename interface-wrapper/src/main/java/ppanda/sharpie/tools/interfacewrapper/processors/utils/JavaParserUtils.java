@@ -29,7 +29,7 @@ public class JavaParserUtils {
         CompilationUnit compilationUnit = extractPackageAndImportDeclarations(declaration);
         ClassOrInterfaceDeclaration targetClassOrInterface = declaration.clone();
         targetClassOrInterface.setParentNode(compilationUnit);
-        compilationUnit.addType(targetClassOrInterface.asTypeDeclaration());
+        compilationUnit.addType(targetClassOrInterface);
         return targetClassOrInterface;
     }
 
