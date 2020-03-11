@@ -1,10 +1,10 @@
 package interfaces;
 
-import converters.OptionalFromStringConverter;
+import converters.OptionalFromTConverter;
 import java.util.Optional;
 import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 
-@WrapperInterface(returnTypeConverters = OptionalFromStringConverter.class)
+@WrapperInterface(returnTypeConverters = OptionalFromTConverter.class)
 public interface Person {
     Optional<String> getNameIfAvailable();
 

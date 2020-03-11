@@ -1,12 +1,11 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
-import static java.util.stream.Collectors.toMap;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.cloneKeepingPackageAndImports;
 
 public class UnderlyingInterfaceCreator extends BaseGenerator {
@@ -24,26 +23,16 @@ public class UnderlyingInterfaceCreator extends BaseGenerator {
         removeTriggeringAnnotations(underlyingInterface);
         removeDefaultAndStaticMethods(underlyingInterface);
 
-        Map<String, String> userDeclaredTypeToOriginalType = buildTypeConversionMap(element);
-
-        replaceReturnTypes(userDeclaredTypeToOriginalType, underlyingInterface);
+        TypeConverters typeConverters = findTypeConverters(element);
+        replaceReturnTypes(underlyingInterface, typeConverters);
         return underlyingInterface;
     }
 
-    private void replaceReturnTypes(Map<String, String> userDeclaredTypeToOriginalType,
-        ClassOrInterfaceDeclaration underlyingInterface) {
+    private void replaceReturnTypes(ClassOrInterfaceDeclaration underlyingInterface,
+        TypeConverters typeConverters) {
         underlyingInterface
             .getMethods()
-            .stream()
-            .filter(method -> userDeclaredTypeToOriginalType.containsKey(getQualifiedReturnType(method)))
-            .forEach(method -> method.setType(userDeclaredTypeToOriginalType.get(getQualifiedReturnType(method))));
+            .forEach(method -> typeConverters.getOriginalType(method.getType())
+                .ifPresent(originalType -> method.setType(originalType.toString())));
     }
-
-    private Map<String, String> buildTypeConversionMap(Element element) {
-        return findTypeConverters(element)
-            .stream()
-            .collect(toMap(model -> model.getDeclaredType().toString(),
-                model -> model.getOriginalType().toString()));
-    }
-
 }

@@ -3,9 +3,9 @@ package converters;
 import java.util.Optional;
 import ppanda.sharpie.tools.interfacewrapper.converters.TypeConverter;
 
-public class OptionalFromStringConverter implements TypeConverter<Optional<String>, String> {
+public class OptionalFromTConverter<E> implements TypeConverter<Optional<E>, E> {
 
-    @Override public Optional<String> convertFrom(String original) {
+    @Override public Optional<E> convertFrom(E original) {
         return Optional.ofNullable(original);
     }
 }

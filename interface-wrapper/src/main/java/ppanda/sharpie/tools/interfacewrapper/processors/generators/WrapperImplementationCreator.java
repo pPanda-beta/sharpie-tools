@@ -15,14 +15,15 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static com.github.javaparser.ast.Modifier.Keyword.FINAL;
 import static com.github.javaparser.ast.Modifier.Keyword.PUBLIC;
@@ -44,7 +45,7 @@ public class WrapperImplementationCreator extends BaseGenerator {
         String underlyingInterfaceQualifiedTypeName = getUnderlyingInterfaceName(anInterface);
         String fieldNameOfUnderlyingIFace = "underlying" + underlyingInterfaceQualifiedTypeName;
 
-        List<TypeConverterMetaModel> typeConverters = findTypeConverters(element);
+        TypeConverters typeConverters = findTypeConverters(element);
 
         Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass = generateUniqueFieldNames(typeConverters);
 
@@ -64,7 +65,7 @@ public class WrapperImplementationCreator extends BaseGenerator {
         addUnderlyingInterfaceAsField(implClass, fieldNameOfUnderlyingIFace, underlyingInterfaceQualifiedTypeName);
 
         addConstructor(implClass, underlyingInterfaceQualifiedTypeName, fieldNameOfUnderlyingIFace);
-        implementMethods(implClass, fieldNameOfUnderlyingIFace, converterVsFieldnameInWrapperclass);
+        implementMethods(implClass, fieldNameOfUnderlyingIFace, converterVsFieldnameInWrapperclass, typeConverters);
         return implClass;
     }
 
@@ -92,8 +93,9 @@ public class WrapperImplementationCreator extends BaseGenerator {
 
     }
 
-    private Map<TypeConverterMetaModel, String> generateUniqueFieldNames(List<TypeConverterMetaModel> typeConverters) {
-        return typeConverters.stream()
+    private Map<TypeConverterMetaModel, String> generateUniqueFieldNames(TypeConverters typeConverters) {
+        return typeConverters
+            .stream()
             .collect(toMap(
                 Function.identity(),
                 converter -> deCapitalize(converter.getOnlyClassNameAsString())
@@ -101,15 +103,12 @@ public class WrapperImplementationCreator extends BaseGenerator {
     }
 
     private void implementMethods(ClassOrInterfaceDeclaration implClass, String fieldNameOfUnderlyingIFace,
-        Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass) {
-        Map<String, TypeConverterMetaModel> returnTypeVsConverters = converterVsFieldnameInWrapperclass.keySet()
-            .stream()
-            .collect(toMap(model -> model.getDeclaredType().toString(), Function.identity()));
+        Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass, TypeConverters typeConverters) {
         implClass.getMethods()
             .forEach(method -> {
-                String qualifiedReturnType = getQualifiedReturnType(method);
-                if (returnTypeVsConverters.containsKey(qualifiedReturnType)) {
-                    TypeConverterMetaModel typeConverter = returnTypeVsConverters.get(qualifiedReturnType);
+                Optional<TypeConverterMetaModel> foundConverter = typeConverters.getSupportedConverter(method.getType());
+                if (foundConverter.isPresent()) {
+                    TypeConverterMetaModel typeConverter = foundConverter.get();
                     String fieldNameInWrapperClass = converterVsFieldnameInWrapperclass.get(typeConverter);
                     addWrappingImplmentation(method, fieldNameOfUnderlyingIFace, fieldNameInWrapperClass);
                 } else {

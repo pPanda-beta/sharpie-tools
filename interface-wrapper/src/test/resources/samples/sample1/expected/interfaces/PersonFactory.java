@@ -1,6 +1,6 @@
 package interfaces;
 
-import converters.OptionalFromStringConverter;
+import converters.OptionalFromTConverter;
 import java.util.Optional;
 import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 
@@ -9,10 +9,10 @@ public class PersonFactory {
     private static class PersonImpl implements Person {
 
         public Optional<String> getNameIfAvailable() {
-            return this.optionalFromStringConverter.convertFrom(underlyingPersonUnderlying.getNameIfAvailable());
+            return this.optionalFromTConverter.convertFrom(underlyingPersonUnderlying.getNameIfAvailable());
         }
 
-        final transient converters.OptionalFromStringConverter optionalFromStringConverter = new converters.OptionalFromStringConverter();
+        final transient converters.OptionalFromTConverter optionalFromTConverter = new converters.OptionalFromTConverter();
 
         final transient PersonUnderlying underlyingPersonUnderlying;
 

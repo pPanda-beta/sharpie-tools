@@ -1,7 +1,7 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
-import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
@@ -10,8 +10,8 @@ import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 import ppanda.sharpie.tools.interfacewrapper.processors.AnnotationFieldExtractionCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.ProcessingComponent;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
-import static java.util.stream.Collectors.toList;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.resolveQualifiedName;
 
 abstract class BaseGenerator extends ProcessingComponent
@@ -26,13 +26,12 @@ abstract class BaseGenerator extends ProcessingComponent
         return resolveQualifiedName(method.getType());
     }
 
-    protected List<TypeConverterMetaModel> findTypeConverters(Element element) {
+    protected TypeConverters findTypeConverters(Element element) {
         return this.
             <TypeMirror>extractMultipleValue(
                 element, WrapperInterface.class, "returnTypeConverters")
             .stream()
             .map(TypeConverterMetaModel::new)
-            .collect(toList());
+            .collect(Collectors.toCollection(TypeConverters::new));
     }
-
 }
