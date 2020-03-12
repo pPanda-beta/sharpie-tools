@@ -4,12 +4,12 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
@@ -20,7 +20,6 @@ import static ppanda.sharpie.tools.interfacewrapper.TestUtils.parseClassOrIfaceD
 public class WrapperFactoryCreatorTest {
     @Mock(answer = RETURNS_DEEP_STUBS) ProcessingEnvironment processingEnvironment;
     @Mock(answer = RETURNS_DEEP_STUBS) RoundEnvironment roundEnvironment;
-    @Mock(answer = RETURNS_DEEP_STUBS) Element element;
     @Mock(answer = RETURNS_DEEP_STUBS) ClassOrInterfaceDeclaration sourceIFace;
     @Mock(answer = RETURNS_DEEP_STUBS) WrapperImplementationCreator wrapperImplementationCreator;
 
@@ -30,8 +29,9 @@ public class WrapperFactoryCreatorTest {
     @Test
     public void shouldPutImplClassInAFactory() {
         when(sourceIFace.getNameAsString()).thenReturn("Foo");
+        TypeConverters typeConverters = new TypeConverters();
 
-        when(wrapperImplementationCreator.generateWrapperInterfaceImplementation(element, sourceIFace))
+        when(wrapperImplementationCreator.generateWrapperInterfaceImplementation(sourceIFace, typeConverters))
             .thenReturn(parseClassOrIfaceDeclarationFromSource("" +
                     "package abc;                                                        " +
                     "                                                                    " +
@@ -52,7 +52,7 @@ public class WrapperFactoryCreatorTest {
                 "FooImpl", true));
 
         ClassOrInterfaceDeclaration resultClass = wrapperFactoryCreator
-            .generateWrapperFactory(element, sourceIFace);
+            .generateWrapperFactory(sourceIFace, typeConverters);
 
         assertThat(resultClass.findCompilationUnit().get()).isEqualTo(StaticJavaParser.parse("" +
             "package abc;                                                                      " +

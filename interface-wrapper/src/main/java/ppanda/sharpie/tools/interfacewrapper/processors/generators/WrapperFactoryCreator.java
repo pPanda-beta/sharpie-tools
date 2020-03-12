@@ -10,7 +10,7 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static com.github.javaparser.ast.Modifier.Keyword.PRIVATE;
 import static com.github.javaparser.ast.Modifier.Keyword.PUBLIC;
@@ -32,9 +32,9 @@ public class WrapperFactoryCreator extends BaseGenerator {
     }
 
     public ClassOrInterfaceDeclaration generateWrapperFactory(
-        Element element, ClassOrInterfaceDeclaration anInterface) {
+        ClassOrInterfaceDeclaration anInterface, TypeConverters typeConverters) {
 
-        ClassOrInterfaceDeclaration implClass = wrapperImplementationCreator.generateWrapperInterfaceImplementation(element, anInterface);
+        ClassOrInterfaceDeclaration implClass = wrapperImplementationCreator.generateWrapperInterfaceImplementation(anInterface, typeConverters);
 
         ClassOrInterfaceDeclaration factoryClass = new ClassOrInterfaceDeclaration(
             new NodeList<>(publicModifier()),

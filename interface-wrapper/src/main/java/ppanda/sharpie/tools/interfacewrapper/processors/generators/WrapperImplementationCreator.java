@@ -21,7 +21,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
@@ -40,12 +39,10 @@ public class WrapperImplementationCreator extends BaseGenerator {
     }
 
     public ClassOrInterfaceDeclaration generateWrapperInterfaceImplementation(
-        Element element, ClassOrInterfaceDeclaration anInterface) {
+        ClassOrInterfaceDeclaration anInterface, TypeConverters typeConverters) {
 
         String underlyingInterfaceQualifiedTypeName = getUnderlyingInterfaceName(anInterface);
         String fieldNameOfUnderlyingIFace = "underlying" + underlyingInterfaceQualifiedTypeName;
-
-        TypeConverters typeConverters = findTypeConverters(element);
 
         Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass = generateUniqueFieldNames(typeConverters);
 
