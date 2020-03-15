@@ -4,6 +4,7 @@ import com.google.common.collect.Iterables;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -23,8 +24,16 @@ public class GroupedProcessableElement {
     }
 
     public Set<AnnotationMirror> getSubstitutedAnnotationMirrors() {
+        return extractFromPath(path -> Iterables.getFirst(path, null));
+    }
+
+    public Set<AnnotationMirror> getTriggeringAnnotationMirrors() {
+        return extractFromPath(Iterables::getLast);
+    }
+
+    private Set<AnnotationMirror> extractFromPath(Function<List<AnnotationMirror>, AnnotationMirror> extractor) {
         return allPaths.stream()
-            .map(path -> Iterables.getFirst(path, null))
+            .map(extractor)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
     }

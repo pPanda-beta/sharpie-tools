@@ -3,6 +3,8 @@ package ppanda.sharpie.tools.interfacewrapper.processors;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.sun.tools.javac.code.Symbol;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
@@ -38,12 +40,17 @@ public class WrappingTask extends ProcessingComponent {
             CompilationUnit packageAndImports = extractPackageAndImportDeclarations(classOrInterface);
             TypeConverters typeConverters = typeConvertersExtractor.fetchReturnTypeConverters(
                 processableElement.getSubstitutedAnnotationMirrors());
-
-            ClassOrInterfaceDeclaration factoryClass = wrapperFactoryCreator.generateWrapperFactory(classOrInterface, typeConverters);
+            Set<String> triggeringAnnotationNames = processableElement.getTriggeringAnnotationMirrors()
+                .stream()
+                .map(mirror -> ((Symbol.ClassSymbol) mirror.getAnnotationType().asElement())
+                    .fullname.toString())
+                .collect(Collectors.toSet());
+            ClassOrInterfaceDeclaration factoryClass = wrapperFactoryCreator.generateWrapperFactory(
+                classOrInterface, typeConverters, triggeringAnnotationNames);
             sourceWriter.write(packageAndImports, factoryClass);
 
             ClassOrInterfaceDeclaration underlyingInterface = underlyingInterfaceCreator.generateUnderlyingInterface(
-                classOrInterface, typeConverters);
+                classOrInterface, typeConverters, triggeringAnnotationNames);
             sourceWriter.write(packageAndImports, underlyingInterface);
         } catch (Exception e) {
             logError("An error occurred ", e);

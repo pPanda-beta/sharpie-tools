@@ -1,6 +1,7 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
@@ -15,11 +16,11 @@ public class UnderlyingInterfaceCreator extends BaseGenerator {
     }
 
     public ClassOrInterfaceDeclaration generateUnderlyingInterface(ClassOrInterfaceDeclaration anInterface,
-        TypeConverters typeConverters) {
+        TypeConverters typeConverters, Set<String> triggeringAnnotationNames) {
         ClassOrInterfaceDeclaration underlyingInterface = cloneKeepingPackageAndImports(anInterface)
             .setName(getUnderlyingInterfaceName(anInterface));
 
-        removeTriggeringAnnotations(underlyingInterface);
+        removeTriggeringAnnotations(underlyingInterface, triggeringAnnotationNames);
         removeDefaultAndStaticMethods(underlyingInterface);
 
         replaceReturnTypes(underlyingInterface, typeConverters);

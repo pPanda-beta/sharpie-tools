@@ -17,6 +17,7 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -39,7 +40,8 @@ public class WrapperImplementationCreator extends BaseGenerator {
     }
 
     public ClassOrInterfaceDeclaration generateWrapperInterfaceImplementation(
-        ClassOrInterfaceDeclaration anInterface, TypeConverters typeConverters) {
+        ClassOrInterfaceDeclaration anInterface, TypeConverters typeConverters,
+        Set<String> triggeringAnnotationNames) {
 
         String underlyingInterfaceQualifiedTypeName = getUnderlyingInterfaceName(anInterface);
         String fieldNameOfUnderlyingIFace = "underlying" + underlyingInterfaceQualifiedTypeName;
@@ -50,7 +52,7 @@ public class WrapperImplementationCreator extends BaseGenerator {
             .setName(getImpleClassName(anInterface))
             .setInterface(false);
 
-        removeTriggeringAnnotations(implClass);
+        removeTriggeringAnnotations(implClass, triggeringAnnotationNames);
         removeDefaultAndStaticMethods(implClass);
 
         implClass.setImplementedTypes(new NodeList<>(

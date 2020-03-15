@@ -2,6 +2,8 @@ package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import java.util.Collections;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import org.junit.Test;
@@ -31,7 +33,8 @@ public class WrapperFactoryCreatorTest {
         when(sourceIFace.getNameAsString()).thenReturn("Foo");
         TypeConverters typeConverters = new TypeConverters();
 
-        when(wrapperImplementationCreator.generateWrapperInterfaceImplementation(sourceIFace, typeConverters))
+        Set<String> triggeringAnnotationNames = Collections.emptySet();
+        when(wrapperImplementationCreator.generateWrapperInterfaceImplementation(sourceIFace, typeConverters, triggeringAnnotationNames))
             .thenReturn(parseClassOrIfaceDeclarationFromSource("" +
                     "package abc;                                                        " +
                     "                                                                    " +
@@ -52,7 +55,7 @@ public class WrapperFactoryCreatorTest {
                 "FooImpl", true));
 
         ClassOrInterfaceDeclaration resultClass = wrapperFactoryCreator
-            .generateWrapperFactory(sourceIFace, typeConverters);
+            .generateWrapperFactory(sourceIFace, typeConverters, triggeringAnnotationNames);
 
         assertThat(resultClass.findCompilationUnit().get()).isEqualTo(StaticJavaParser.parse("" +
             "package abc;                                                                      " +
