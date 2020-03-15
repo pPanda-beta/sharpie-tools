@@ -1,11 +1,11 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.readers;
 
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.type.TypeMirror;
-import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 import ppanda.sharpie.tools.interfacewrapper.processors.AnnotationFieldExtractionCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.ProcessingComponent;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
@@ -19,11 +19,10 @@ public class TypeConvertersExtractor extends ProcessingComponent
         super(processingEnv, roundEnv);
     }
 
-    public TypeConverters fetchReturnTypeConverters(Element element) {
-        return this.
-            <TypeMirror>extractMultipleValue(
-                element, WrapperInterface.class, "returnTypeConverters")
+    public TypeConverters fetchReturnTypeConverters(Set<AnnotationMirror> annotationMirrors) {
+        return annotationMirrors
             .stream()
+            .flatMap(mirror -> this.<TypeMirror>extractMultipleValue(mirror, "returnTypeConverters").stream())
             .map(TypeConverterMetaModel::new)
             .collect(Collectors.toCollection(TypeConverters::new));
     }

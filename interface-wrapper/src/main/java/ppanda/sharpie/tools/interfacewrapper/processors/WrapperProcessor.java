@@ -12,7 +12,10 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import ppanda.sharpie.tools.annotationutils.AnnotationTree;
 import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 
 @SupportedAnnotationTypes("ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface")
@@ -25,9 +28,18 @@ public class WrapperProcessor extends AbstractProcessor {
         RoundEnvironment roundEnv) {
 
         WrappingTask wrappingTask = new WrappingTask(processingEnv, roundEnv);
-        roundEnv.getElementsAnnotatedWith(WrapperInterface.class)
+
+        AnnotationTree.of(WrapperInterface.class, roundEnv, processingEnv)
+            .findAllMergedProcessableElements()
+            .stream()
+            .filter(processableElement -> isAnInterface(processableElement.getElement()))
             .forEach(wrappingTask::perform);
         return true;
+    }
+
+    private boolean isAnInterface(Element element) {
+        return element
+            .getKind().equals(ElementKind.INTERFACE);
     }
 
     @Override public synchronized void init(ProcessingEnvironment processingEnv) {

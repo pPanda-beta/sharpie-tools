@@ -5,7 +5,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.sun.tools.javac.code.Symbol;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
+import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.UnderlyingInterfaceCreator;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.WrapperFactoryCreator;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
@@ -31,12 +31,13 @@ public class WrappingTask extends ProcessingComponent {
         typeConvertersExtractor = new TypeConvertersExtractor(processingEnv, roundEnv);
     }
 
-    public void perform(Element element) {
+    public void perform(GroupedProcessableElement processableElement) {
         try {
-            Symbol.ClassSymbol sourceInterface = (Symbol.ClassSymbol) element;
+            Symbol.ClassSymbol sourceInterface = (Symbol.ClassSymbol) processableElement.getElement();
             ClassOrInterfaceDeclaration classOrInterface = classOrInterfaceExtractor.extract(sourceInterface);
             CompilationUnit packageAndImports = extractPackageAndImportDeclarations(classOrInterface);
-            TypeConverters typeConverters = typeConvertersExtractor.fetchReturnTypeConverters(element);
+            TypeConverters typeConverters = typeConvertersExtractor.fetchReturnTypeConverters(
+                processableElement.getSubstitutedAnnotationMirrors());
 
             ClassOrInterfaceDeclaration factoryClass = wrapperFactoryCreator.generateWrapperFactory(classOrInterface, typeConverters);
             sourceWriter.write(packageAndImports, factoryClass);

@@ -1,3 +1,4 @@
 include ':interface-wrapper'
 include ':interface-wrapper-samples:simple-interface-wrapper'
+include ':interface-wrapper-samples:meta-annotation-interface-wrapper'
 
