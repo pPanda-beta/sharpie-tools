@@ -22,6 +22,7 @@ import ppanda.sharpie.tools.interfacewrapper.converters.TypeConverter;
 
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.applyResolutions;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.buildGenericTypeExtractor;
+import static ppanda.sharpie.tools.interfacewrapper.processors.utils.TypeConversionUtils.isConvertible;
 
 public class TypeConverterMetaModel {
     private final TypeMirror typeMirror;
@@ -82,9 +83,7 @@ public class TypeConverterMetaModel {
     public boolean supportsDeclaredType(Type requestedDeclaredType) {
         Type declaredType = declaredType();
 
-        String requestedDeclaredTypeName = requestedDeclaredType.resolve().asReferenceType().getQualifiedName();
-        String declaredTypeName = declaredType.resolve().asReferenceType().getQualifiedName();
-        return requestedDeclaredTypeName.equals(declaredTypeName);
+        return isConvertible(requestedDeclaredType, declaredType);
     }
 
     private Type declaredType() {

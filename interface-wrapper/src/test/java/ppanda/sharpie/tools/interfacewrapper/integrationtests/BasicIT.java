@@ -39,6 +39,27 @@ public class BasicIT {
             .hasSourceEquivalentTo(expectedSrcOfFactoryClass);
     }
 
+    @Test
+    public void generateSourcesForSample2() {
+        String sourceClasspath = "samples/sample2/source";
+        JavaFileObject sourceIFace = JavaFileObjects.forResource("samples/sample2/source/interfaces/Person.java");
+
+        Compilation compilation = javac()
+            .withClasspath(systemClasspathsAnd(sourceClasspath))
+            .withProcessors(new WrapperProcessor())
+            .compile(sourceIFace);
+
+        JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource("samples/sample2/expected/interfaces/PersonUnderlying.java");
+        JavaFileObject expectedSrcOfFactoryClass = JavaFileObjects.forResource("samples/sample2/expected/interfaces/PersonFactory.java");
+
+        assertThat(compilation)
+            .generatedSourceFile("interfaces.PersonUnderlying")
+            .hasSourceEquivalentTo(expectedSrcOfUnderlyingIFace);
+        assertThat(compilation)
+            .generatedSourceFile("interfaces.PersonFactory")
+            .hasSourceEquivalentTo(expectedSrcOfFactoryClass);
+    }
+
     private List<File> systemClasspathsAnd(String extraClasspath) {
         ImmutableList<File> systemClasspaths = javac()
             .withClasspathFrom(this.getClass().getClassLoader())
