@@ -1,9 +1,9 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.cloneKeepingPackageAndImports;
@@ -16,11 +16,11 @@ public class UnderlyingInterfaceCreator extends BaseGenerator {
     }
 
     public ClassOrInterfaceDeclaration generateUnderlyingInterface(ClassOrInterfaceDeclaration anInterface,
-        TypeConverters typeConverters, Set<String> triggeringAnnotationNames) {
+        TypeConverters typeConverters, GroupedProcessableElement processableElement) {
         ClassOrInterfaceDeclaration underlyingInterface = cloneKeepingPackageAndImports(anInterface)
             .setName(getUnderlyingInterfaceName(anInterface));
 
-        removeTriggeringAnnotations(underlyingInterface, triggeringAnnotationNames);
+        removeTriggeringAnnotations(underlyingInterface, processableElement.getTriggeringAnnotationNames());
         removeDefaultAndStaticMethods(underlyingInterface);
 
         replaceReturnTypes(underlyingInterface, typeConverters);

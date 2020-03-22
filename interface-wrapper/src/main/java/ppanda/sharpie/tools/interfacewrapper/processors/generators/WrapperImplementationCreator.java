@@ -17,11 +17,11 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
@@ -41,7 +41,7 @@ public class WrapperImplementationCreator extends BaseGenerator {
 
     public ClassOrInterfaceDeclaration generateWrapperInterfaceImplementation(
         ClassOrInterfaceDeclaration anInterface, TypeConverters typeConverters,
-        Set<String> triggeringAnnotationNames) {
+        GroupedProcessableElement processableElement) {
 
         String underlyingInterfaceQualifiedTypeName = getUnderlyingInterfaceName(anInterface);
         String fieldNameOfUnderlyingIFace = "underlying" + underlyingInterfaceQualifiedTypeName;
@@ -52,7 +52,7 @@ public class WrapperImplementationCreator extends BaseGenerator {
             .setName(getImpleClassName(anInterface))
             .setInterface(false);
 
-        removeTriggeringAnnotations(implClass, triggeringAnnotationNames);
+        removeTriggeringAnnotations(implClass, processableElement.getTriggeringAnnotationNames());
         removeDefaultAndStaticMethods(implClass);
 
         implClass.setImplementedTypes(new NodeList<>(

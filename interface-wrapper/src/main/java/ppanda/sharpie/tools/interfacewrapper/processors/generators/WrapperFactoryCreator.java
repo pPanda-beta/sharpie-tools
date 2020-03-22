@@ -8,9 +8,9 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
-import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static com.github.javaparser.ast.Modifier.Keyword.PRIVATE;
@@ -34,10 +34,10 @@ public class WrapperFactoryCreator extends BaseGenerator {
 
     public ClassOrInterfaceDeclaration generateWrapperFactory(
         ClassOrInterfaceDeclaration anInterface, TypeConverters typeConverters,
-        Set<String> triggeringAnnotationNames) {
+        GroupedProcessableElement processableElement) {
 
         ClassOrInterfaceDeclaration implClass = wrapperImplementationCreator
-            .generateWrapperInterfaceImplementation(anInterface, typeConverters, triggeringAnnotationNames);
+            .generateWrapperInterfaceImplementation(anInterface, typeConverters, processableElement);
 
         ClassOrInterfaceDeclaration factoryClass = new ClassOrInterfaceDeclaration(
             new NodeList<>(publicModifier()),

@@ -1,6 +1,7 @@
 package ppanda.sharpie.tools.annotationutils;
 
 import com.google.common.collect.Iterables;
+import com.sun.tools.javac.code.Symbol;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -29,6 +30,14 @@ public class GroupedProcessableElement {
 
     public Set<AnnotationMirror> getTriggeringAnnotationMirrors() {
         return extractFromPath(Iterables::getLast);
+    }
+
+    public Set<String> getTriggeringAnnotationNames() {
+        return getTriggeringAnnotationMirrors()
+            .stream()
+            .map(mirror -> ((Symbol.ClassSymbol) mirror.getAnnotationType().asElement())
+                .fullname.toString())
+            .collect(Collectors.toSet());
     }
 
     private Set<AnnotationMirror> extractFromPath(Function<List<AnnotationMirror>, AnnotationMirror> extractor) {
