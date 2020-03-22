@@ -15,6 +15,8 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -95,9 +97,14 @@ public class WrapperImplementationCreator extends BaseGenerator {
     private Map<TypeConverterMetaModel, String> generateUniqueFieldNames(TypeConverters typeConverters) {
         return typeConverters
             .stream()
+            .sorted(Comparator.comparing(t -> t.getQualifiedClassName().toString())) //TODO: Just for ITs, compile-testing:0.18 breaks if order of fields are different
             .collect(toMap(
                 Function.identity(),
-                converter -> deCapitalize(converter.getOnlyClassNameAsString())
+                converter -> deCapitalize(converter.getOnlyClassNameAsString()),
+                (x, y) -> {
+                    throw new IllegalStateException("Duplicate value found for same key " + x);
+                },
+                LinkedHashMap::new
             ));
     }
 

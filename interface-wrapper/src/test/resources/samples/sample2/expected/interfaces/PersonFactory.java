@@ -17,9 +17,9 @@ public class PersonFactory {
             return this.optionalFromIntegerConverter.convertFrom(underlyingPersonUnderlying.getAgeIfAvailable());
         }
 
-        final transient converters.OptionalFromStringConverter optionalFromStringConverter = new converters.OptionalFromStringConverter();
-
         final transient converters.OptionalFromIntegerConverter optionalFromIntegerConverter = new converters.OptionalFromIntegerConverter();
+
+        final transient converters.OptionalFromStringConverter optionalFromStringConverter = new converters.OptionalFromStringConverter();
 
         final transient PersonUnderlying underlyingPersonUnderlying;
 
