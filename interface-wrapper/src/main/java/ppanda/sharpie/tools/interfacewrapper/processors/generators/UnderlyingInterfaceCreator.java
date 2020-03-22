@@ -3,12 +3,15 @@ package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.Element;
 import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
+import ppanda.sharpie.tools.interfacewrapper.annotations.AnnotationCaptor;
+import ppanda.sharpie.tools.interfacewrapper.processors.AnnotationExtractionCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.cloneKeepingPackageAndImports;
 
-public class UnderlyingInterfaceCreator extends BaseGenerator {
+public class UnderlyingInterfaceCreator extends BaseGenerator implements AnnotationExtractionCapability {
 
     public UnderlyingInterfaceCreator(ProcessingEnvironment processingEnv,
         RoundEnvironment roundEnv) {
@@ -21,10 +24,17 @@ public class UnderlyingInterfaceCreator extends BaseGenerator {
             .setName(getUnderlyingInterfaceName(anInterface));
 
         removeTriggeringAnnotations(underlyingInterface, processableElement.getTriggeringAnnotationNames());
+        addCapturedAnnotations(underlyingInterface, processableElement.getElement());
         removeDefaultAndStaticMethods(underlyingInterface);
 
         replaceReturnTypes(underlyingInterface, typeConverters);
         return underlyingInterface;
+    }
+
+    private void addCapturedAnnotations(ClassOrInterfaceDeclaration underlyingInterface,
+        Element element) {
+        getCapturedAnnotations(element.getAnnotationMirrors(), AnnotationCaptor.class)
+            .forEach(underlyingInterface::addAnnotation);
     }
 
     private void replaceReturnTypes(ClassOrInterfaceDeclaration underlyingInterface,
