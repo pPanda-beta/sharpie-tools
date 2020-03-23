@@ -129,6 +129,42 @@ public class TypeConversionUtilsTest {
         assertThat(isConvertible(parseType("Integer"), parseType("Object"))).isTrue();
     }
 
+    @Test
+    public void shouldVerifyDefaultClassesAsTypeArgs() {
+        CompilationUnit compilationUnit = StaticJavaParser.parse("" +
+            "import java.util.*;" +
+            "" +
+            "class Person { } " +
+            "" +
+            "class X { " +
+            "    Person fieldOfX;" +
+            "}" +
+            "" +
+            "class Y { " +
+            "    Person fieldOfY;" +
+            "}" +
+            "");
+
+        ClassOrInterfaceDeclaration clazzXT = compilationUnit
+            .getClassByName("X").get();
+
+        Type personType = clazzXT.getMember(0)
+            .asFieldDeclaration()
+            .getVariable(0)
+            .getType();
+
+        ClassOrInterfaceDeclaration clazzYT = compilationUnit
+            .getClassByName("Y").get();
+
+        Type anotherPersonType = clazzYT.getMember(0)
+            .asFieldDeclaration()
+            .getVariable(0)
+            .getType();
+
+        assertThat(isConvertible(personType, anotherPersonType))
+            .isTrue();
+    }
+
     private Type parseType(String stringifiedType) {
         Type type = StaticJavaParser.parseType(stringifiedType);
         type.setParentNode(imports);
