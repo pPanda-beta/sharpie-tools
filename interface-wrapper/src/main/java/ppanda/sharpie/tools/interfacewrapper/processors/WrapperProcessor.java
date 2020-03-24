@@ -2,8 +2,13 @@ package ppanda.sharpie.tools.interfacewrapper.processors;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JarTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.google.auto.service.AutoService;
+import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import com.sun.tools.javac.util.Options;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -44,7 +49,26 @@ public class WrapperProcessor extends AbstractProcessor {
 
     @Override public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
+
+        CombinedTypeSolver solver = new CombinedTypeSolver();
+        solver.add(new ReflectionTypeSolver());
+
+        JavacProcessingEnvironment env = (JavacProcessingEnvironment) processingEnv;
+        String cp = Options.instance(env.getContext()).get("-classpath");
+        if (cp != null) {
+            for (String path : cp.split(":")) {
+                try {
+                    if (path.endsWith(".jar")) {
+                        solver.add(new JarTypeSolver(path));
+                    } else
+                        solver.add(new JavaParserTypeSolver(path));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
         StaticJavaParser.getConfiguration()
-            .setSymbolResolver(new JavaSymbolSolver(new ReflectionTypeSolver()));
+            .setSymbolResolver(new JavaSymbolSolver(solver));
     }
 }

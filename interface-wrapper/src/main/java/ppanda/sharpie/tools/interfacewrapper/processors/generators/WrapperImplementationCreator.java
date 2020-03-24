@@ -15,10 +15,10 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.google.common.collect.Maps;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -49,6 +49,9 @@ public class WrapperImplementationCreator extends BaseGenerator {
         String fieldNameOfUnderlyingIFace = "underlying" + underlyingInterfaceQualifiedTypeName;
 
         Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass = generateUniqueFieldNames(typeConverters);
+        //TODO: Since cloneKeepingPackageAndImports(...) will remove default classes in the cu of implClass,
+        // we need to build this map from source interface
+        Map<MethodDeclaration, String> methodVsConverterFieldName = buildMethodVsConverterFieldnameMap(anInterface, typeConverters, converterVsFieldnameInWrapperclass);
 
         ClassOrInterfaceDeclaration implClass = cloneKeepingPackageAndImports(anInterface)
             .setName(getImpleClassName(anInterface))
@@ -66,8 +69,21 @@ public class WrapperImplementationCreator extends BaseGenerator {
         addUnderlyingInterfaceAsField(implClass, fieldNameOfUnderlyingIFace, underlyingInterfaceQualifiedTypeName);
 
         addConstructor(implClass, underlyingInterfaceQualifiedTypeName, fieldNameOfUnderlyingIFace);
-        implementMethods(implClass, fieldNameOfUnderlyingIFace, converterVsFieldnameInWrapperclass, typeConverters);
+        implementMethods(implClass, fieldNameOfUnderlyingIFace, methodVsConverterFieldName);
         return implClass;
+    }
+
+    private Map<MethodDeclaration, String> buildMethodVsConverterFieldnameMap(ClassOrInterfaceDeclaration anInterface,
+        TypeConverters typeConverters, Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass) {
+        return anInterface.getMethods()
+            .stream()
+            .filter(method -> !(method.isStatic() || method.isDefault()))
+            .map(method -> Maps.immutableEntry(method, typeConverters.getSupportedConverter(method.getType())))
+            .filter(entry -> entry.getValue().isPresent())
+            .collect(toMap(
+                Map.Entry::getKey,
+                entry -> converterVsFieldnameInWrapperclass.get(entry.getValue().get())
+            ));
     }
 
     private void addConstructor(ClassOrInterfaceDeclaration implClass, String underlyingInterfaceQualifiedTypeName,
@@ -109,13 +125,11 @@ public class WrapperImplementationCreator extends BaseGenerator {
     }
 
     private void implementMethods(ClassOrInterfaceDeclaration implClass, String fieldNameOfUnderlyingIFace,
-        Map<TypeConverterMetaModel, String> converterVsFieldnameInWrapperclass, TypeConverters typeConverters) {
+        Map<MethodDeclaration, String> methodVsConverterFieldName) {
         implClass.getMethods()
             .forEach(method -> {
-                Optional<TypeConverterMetaModel> foundConverter = typeConverters.getSupportedConverter(method.getType());
-                if (foundConverter.isPresent()) {
-                    TypeConverterMetaModel typeConverter = foundConverter.get();
-                    String fieldNameInWrapperClass = converterVsFieldnameInWrapperclass.get(typeConverter);
+                if (methodVsConverterFieldName.containsKey(method)) {
+                    String fieldNameInWrapperClass = methodVsConverterFieldName.get(method);
                     addWrappingImplmentation(method, fieldNameOfUnderlyingIFace, fieldNameInWrapperClass);
                 } else {
                     addDelegatingImplementation(method, fieldNameOfUnderlyingIFace);
