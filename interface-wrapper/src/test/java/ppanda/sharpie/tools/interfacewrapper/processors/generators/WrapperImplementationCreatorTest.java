@@ -2,6 +2,7 @@ package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import java.util.Collections;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import org.junit.Test;
@@ -10,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Java6Assertions.assertThat;
@@ -31,6 +31,7 @@ public class WrapperImplementationCreatorTest {
     public void shouldGenerateImplClass() {
         when(processableElement.getTriggeringAnnotationNames()).thenReturn(singleton(
             "ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface"));
+        Transformers transformers = new Transformers(Collections.emptyList(), "underlyingFooUnderlying");
 
         ClassOrInterfaceDeclaration fooIFace = parseClassOrIfaceDeclarationFromSource("" +
                 "package abc; " +
@@ -43,7 +44,7 @@ public class WrapperImplementationCreatorTest {
                 "} ",
             "Foo", false);
         ClassOrInterfaceDeclaration resultClass = wrapperImplCreator
-            .generateWrapperInterfaceImplementation(fooIFace, new TypeConverters(), processableElement);
+            .generateWrapperInterfaceImplementation(fooIFace, transformers, processableElement);
 
         assertThat(resultClass.findCompilationUnit().get()).isEqualTo(StaticJavaParser.parse("" +
             "package abc;                                                                " +

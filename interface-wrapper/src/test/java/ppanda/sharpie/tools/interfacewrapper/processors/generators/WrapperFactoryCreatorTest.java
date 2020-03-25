@@ -2,6 +2,7 @@ package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import java.util.Collections;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import org.junit.Test;
@@ -10,7 +11,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import ppanda.sharpie.tools.annotationutils.GroupedProcessableElement;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverters;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
@@ -31,9 +31,9 @@ public class WrapperFactoryCreatorTest {
     @Test
     public void shouldPutImplClassInAFactory() {
         when(sourceIFace.getNameAsString()).thenReturn("Foo");
-        TypeConverters typeConverters = new TypeConverters();
+        Transformers transformers = new Transformers(Collections.emptyList(), "underlyingFooUnderlying");
 
-        when(wrapperImplementationCreator.generateWrapperInterfaceImplementation(sourceIFace, typeConverters, processableElement))
+        when(wrapperImplementationCreator.generateWrapperInterfaceImplementation(sourceIFace, transformers, processableElement))
             .thenReturn(parseClassOrIfaceDeclarationFromSource("" +
                     "package abc;                                                        " +
                     "                                                                    " +
@@ -54,7 +54,7 @@ public class WrapperFactoryCreatorTest {
                 "FooImpl", true));
 
         ClassOrInterfaceDeclaration resultClass = wrapperFactoryCreator
-            .generateWrapperFactory(sourceIFace, typeConverters, processableElement);
+            .generateWrapperFactory(sourceIFace, transformers, processableElement);
 
         assertThat(resultClass.findCompilationUnit().get()).isEqualTo(StaticJavaParser.parse("" +
             "package abc;                                                                      " +

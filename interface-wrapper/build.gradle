@@ -28,16 +28,11 @@ task sourcesJar(type: Jar) {
     classifier "sources"
 }
 
-//publishing {
-//    publications {
-//        mavenJava(MavenPublication) {
-//            artifactId = 'interface-wrapper'
-//            from components.java
-//            artifact sourcesJar
-//            pom {
-//                name = 'Interface Wrapper'
-//                description = 'Smart compile time annotation processor to create wrapper of interfaces'
-//            }
-//        }
-//    }
-//}
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+        }
+    }
+}
