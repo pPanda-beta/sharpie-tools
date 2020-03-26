@@ -9,8 +9,6 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeS
 import com.google.auto.service.AutoService;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import com.sun.tools.javac.util.Options;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -30,8 +28,6 @@ import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 @AutoService(Processor.class)
 public class WrapperProcessor extends AbstractProcessor {
 
-    private final List<ProcessingContext> contexts = new ArrayList<>();
-
     @Override
     public boolean process(Set<? extends TypeElement> annotations,
         RoundEnvironment roundEnv) {
@@ -44,11 +40,7 @@ public class WrapperProcessor extends AbstractProcessor {
             .stream()
             .filter(processableElement -> isAnInterface(processableElement.getElement()))
             .map(wrappingTask::perform)
-            .forEach(contexts::add);
-
-        if (roundEnv.processingOver()) {
-            contexts.forEach(finalizingTask::perform);
-        }
+            .forEach(finalizingTask::perform);
         return true;
     }
 
