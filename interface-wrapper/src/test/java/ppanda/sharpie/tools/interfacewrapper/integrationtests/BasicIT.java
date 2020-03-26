@@ -67,6 +67,25 @@ public class BasicIT {
             "samples/sample4/expected/interfaces/PersonFactory.java");
     }
 
+    @Test
+    public void interfaceWithReturnTypeUnWrapper() {
+        Compilation compilation = compile("samples/sample5/source",
+            "samples/sample5/source/interfaces/Person.java"
+        );
+
+        verifyGeneratedFileContents(compilation, "interfaces.PersonUnderlying",
+            "samples/sample5/expected/interfaces/PersonUnderlying.java");
+
+        verifyGeneratedFileContents(compilation, "interfaces.PersonFactory",
+            "samples/sample5/expected/interfaces/PersonFactory.java");
+
+        verifyGeneratedFileContents(compilation, "interfaces.RepositoryUnderlying",
+            "samples/sample5/expected/interfaces/RepositoryUnderlying.java");
+
+        verifyGeneratedFileContents(compilation, "interfaces.RepositoryFactory",
+            "samples/sample5/expected/interfaces/RepositoryFactory.java");
+    }
+
     private void verifyGeneratedFileContents(Compilation compilation, String generatedSourceQualifiedName,
         String expectedGeneratedFile) {
         JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource(expectedGeneratedFile);

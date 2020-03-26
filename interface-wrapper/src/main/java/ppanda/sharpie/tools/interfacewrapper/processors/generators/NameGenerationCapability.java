@@ -6,7 +6,11 @@ import ppanda.sharpie.tools.interfacewrapper.processors.ProcessingCapability;
 //TODO: Pseudo multiple-inheritance
 public interface NameGenerationCapability extends ProcessingCapability {
     default String getNameOfFactoryClass(ClassOrInterfaceDeclaration anInterface) {
-        return anInterface.getNameAsString() + "Factory";
+        return getNameOfFactoryClass(anInterface.getNameAsString());
+    }
+
+    default String getNameOfFactoryClass(String sourceIFaceName) {
+        return sourceIFaceName + "Factory";
     }
 
     default String getImpleClassName(ClassOrInterfaceDeclaration sourceIFace) {
@@ -14,7 +18,11 @@ public interface NameGenerationCapability extends ProcessingCapability {
     }
 
     default String getUnderlyingInterfaceName(ClassOrInterfaceDeclaration sourceIFace) {
-        return sourceIFace.getNameAsString() + "Underlying";
+        return getUnderlyingInterfaceName(sourceIFace.getNameAsString());
+    }
+
+    default String getUnderlyingInterfaceName(String sourceIFaceName) {
+        return sourceIFaceName + "Underlying";
     }
 
     default String getFieldNameOfUnderlyingIFace(ClassOrInterfaceDeclaration sourceIFace) {

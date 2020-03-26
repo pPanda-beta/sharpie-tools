@@ -63,17 +63,6 @@ public class TypeConverterBasedTransformer implements Transformer {
         );
     }
 
-    //TODO: Since cloneKeepingPackageAndImports(...) will remove default classes in the cu of implClass,
-    // we need to build this map from source interface
-    private MethodDeclaration findMethodInSourceInterface(ClassOrInterfaceDeclaration sourceInterface,
-        MethodDeclaration method) {
-        return sourceInterface.getMethods()
-            .stream()
-            .filter(method::equals) // TODO: signature based equality check should be there
-            .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("" + method + " is not found in source interface " + sourceInterface));
-    }
-
     private void addWrappingImplementation(MethodDeclaration method, String fieldNameOfUnderlyingIFace,
         String fieldNameInWrapperClass) {
         MethodCallExpr originalCall = delegatingCallExpr(method, fieldNameOfUnderlyingIFace);

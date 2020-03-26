@@ -20,4 +20,16 @@ public interface Transformer {
     default void integrateInUnderlyingInterface(ClassOrInterfaceDeclaration sourceInterface,
         ClassOrInterfaceDeclaration implClass) {
     }
+
+    //TODO: Since cloneKeepingPackageAndImports(...) will remove default classes in the cu of implClass,
+    // we need to build this map from source interface
+    default MethodDeclaration findMethodInSourceInterface(ClassOrInterfaceDeclaration sourceInterface,
+        MethodDeclaration method) {
+        return sourceInterface.getMethods()
+            .stream()
+            .filter(method::equals) // TODO: signature based equality check should be there
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("" + method + " is not found in source interface " + sourceInterface));
+    }
+
 }
