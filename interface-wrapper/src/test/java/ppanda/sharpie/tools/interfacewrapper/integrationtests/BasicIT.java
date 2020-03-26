@@ -19,88 +19,71 @@ import static com.google.testing.compile.Compiler.javac;
 public class BasicIT {
 
     @Test
-    public void generateSourcesForSample1() {
-        String sourceClasspath = "samples/sample1/source";
-        JavaFileObject sourceIFace = JavaFileObjects.forResource("samples/sample1/source/interfaces/Person.java");
+    public void simpleInterfaceWithGenericTypeConverter() {
+        Compilation compilation = compile("samples/sample1/source",
+            "samples/sample1/source/interfaces/Person.java");
 
-        Compilation compilation = javac()
-            .withClasspath(systemClasspathsAnd(sourceClasspath))
-            .withProcessors(new WrapperProcessor())
-            .compile(sourceIFace);
+        verifyGeneratedFileContents(compilation, "interfaces.PersonUnderlying",
+            "samples/sample1/expected/interfaces/PersonUnderlying.java");
 
-        JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource("samples/sample1/expected/interfaces/PersonUnderlying.java");
-        JavaFileObject expectedSrcOfFactoryClass = JavaFileObjects.forResource("samples/sample1/expected/interfaces/PersonFactory.java");
-
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonUnderlying")
-            .hasSourceEquivalentTo(expectedSrcOfUnderlyingIFace);
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonFactory")
-            .hasSourceEquivalentTo(expectedSrcOfFactoryClass);
+        verifyGeneratedFileContents(compilation, "interfaces.PersonFactory",
+            "samples/sample1/expected/interfaces/PersonFactory.java");
     }
 
     @Test
-    public void generateSourcesForSample2() {
-        String sourceClasspath = "samples/sample2/source";
-        JavaFileObject sourceIFace = JavaFileObjects.forResource("samples/sample2/source/interfaces/Person.java");
+    public void interfaceWithMultipleTypeConverters() {
+        Compilation compilation = compile("samples/sample2/source",
+            "samples/sample2/source/interfaces/Person.java");
 
-        Compilation compilation = javac()
-            .withClasspath(systemClasspathsAnd(sourceClasspath))
-            .withProcessors(new WrapperProcessor())
-            .compile(sourceIFace);
+        verifyGeneratedFileContents(compilation, "interfaces.PersonUnderlying",
+            "samples/sample2/expected/interfaces/PersonUnderlying.java");
 
-        JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource("samples/sample2/expected/interfaces/PersonUnderlying.java");
-        JavaFileObject expectedSrcOfFactoryClass = JavaFileObjects.forResource("samples/sample2/expected/interfaces/PersonFactory.java");
-
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonUnderlying")
-            .hasSourceEquivalentTo(expectedSrcOfUnderlyingIFace);
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonFactory")
-            .hasSourceEquivalentTo(expectedSrcOfFactoryClass);
+        verifyGeneratedFileContents(compilation, "interfaces.PersonFactory",
+            "samples/sample2/expected/interfaces/PersonFactory.java");
     }
 
     @Test
-    public void generateSourcesForSample3() {
-        String sourceClasspath = "samples/sample3/source";
-        JavaFileObject sourceMetaAnnotation = JavaFileObjects.forResource("samples/sample3/source/annotations/OptionalStringWrapper.java");
-        JavaFileObject sourceIFace = JavaFileObjects.forResource("samples/sample3/source/interfaces/Person.java");
+    public void interfaceWithMetaAnnotation() {
+        Compilation compilation = compile("samples/sample3/source",
+            "samples/sample3/source/annotations/OptionalStringWrapper.java",
+            "samples/sample3/source/interfaces/Person.java");
 
-        Compilation compilation = javac()
-            .withClasspath(systemClasspathsAnd(sourceClasspath))
-            .withProcessors(new WrapperProcessor())
-            .compile(sourceMetaAnnotation, sourceIFace);
+        verifyGeneratedFileContents(compilation, "interfaces.PersonUnderlying",
+            "samples/sample3/expected/interfaces/PersonUnderlying.java");
 
-        JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource("samples/sample3/expected/interfaces/PersonUnderlying.java");
-        JavaFileObject expectedSrcOfFactoryClass = JavaFileObjects.forResource("samples/sample3/expected/interfaces/PersonFactory.java");
-
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonUnderlying")
-            .hasSourceEquivalentTo(expectedSrcOfUnderlyingIFace);
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonFactory")
-            .hasSourceEquivalentTo(expectedSrcOfFactoryClass);
+        verifyGeneratedFileContents(compilation, "interfaces.PersonFactory",
+            "samples/sample3/expected/interfaces/PersonFactory.java");
     }
 
     @Test
-    public void generateSourcesForSample4() {
-        String sourceClasspath = "samples/sample4/source";
-        JavaFileObject sourceIFace = JavaFileObjects.forResource("samples/sample4/source/interfaces/Person.java");
+    public void interfaceWithCustomReturnType() {
+        Compilation compilation = compile("samples/sample4/source",
+            "samples/sample4/source/interfaces/Person.java");
 
-        Compilation compilation = javac()
+        verifyGeneratedFileContents(compilation, "interfaces.PersonUnderlying",
+            "samples/sample4/expected/interfaces/PersonUnderlying.java");
+
+        verifyGeneratedFileContents(compilation, "interfaces.PersonFactory",
+            "samples/sample4/expected/interfaces/PersonFactory.java");
+    }
+
+    private void verifyGeneratedFileContents(Compilation compilation, String generatedSourceQualifiedName,
+        String expectedGeneratedFile) {
+        JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource(expectedGeneratedFile);
+        assertThat(compilation)
+            .generatedSourceFile(generatedSourceQualifiedName)
+            .hasSourceEquivalentTo(expectedSrcOfUnderlyingIFace);
+    }
+
+    private Compilation compile(String sourceClasspath, String... sourcePaths) {
+        JavaFileObject[] javaFileObjects = Stream.of(sourcePaths)
+            .map(JavaFileObjects::forResource)
+            .toArray(JavaFileObject[]::new);
+
+        return javac()
             .withClasspath(systemClasspathsAnd(sourceClasspath))
             .withProcessors(new WrapperProcessor())
-            .compile(sourceIFace);
-
-        JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource("samples/sample4/expected/interfaces/PersonUnderlying.java");
-        JavaFileObject expectedSrcOfFactoryClass = JavaFileObjects.forResource("samples/sample4/expected/interfaces/PersonFactory.java");
-
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonUnderlying")
-            .hasSourceEquivalentTo(expectedSrcOfUnderlyingIFace);
-        assertThat(compilation)
-            .generatedSourceFile("interfaces.PersonFactory")
-            .hasSourceEquivalentTo(expectedSrcOfFactoryClass);
+            .compile(javaFileObjects);
     }
 
     private List<File> systemClasspathsAnd(String extraClasspath) {
