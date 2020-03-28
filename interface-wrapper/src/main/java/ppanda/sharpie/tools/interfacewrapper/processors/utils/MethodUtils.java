@@ -3,6 +3,7 @@ package ppanda.sharpie.tools.interfacewrapper.processors.utils;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.LambdaExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.nodeTypes.NodeWithSimpleName;
@@ -18,6 +19,14 @@ public class MethodUtils {
         NodeList<Expression> arguments = method.getParameters().stream().map(NodeWithSimpleName::getNameAsExpression)
             .collect(Collectors.toCollection(NodeList::new));
         return new MethodCallExpr(new NameExpr(fieldNameOfUnderlyingIFace), method.getName(), arguments);
+    }
+
+    public static LambdaExpr delegatingNoArgLambdaCallExpr(MethodDeclaration method,
+        String fieldNameOfUnderlyingIFace) {
+        Expression lambdaBody = delegatingCallExpr(method, fieldNameOfUnderlyingIFace);
+
+        return new LambdaExpr(new NodeList<>(), lambdaBody);
+
     }
 
     public static void setBodyAsStatement(MethodDeclaration method, MethodCallExpr callExpr) {

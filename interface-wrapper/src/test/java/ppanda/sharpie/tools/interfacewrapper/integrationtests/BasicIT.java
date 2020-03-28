@@ -86,6 +86,18 @@ public class BasicIT {
             "samples/sample5/expected/interfaces/RepositoryFactory.java");
     }
 
+    @Test
+    public void simpleInterfaceWithGenericLazyTypeConverter() {
+        Compilation compilation = compile("samples/sample6/source",
+            "samples/sample6/source/interfaces/Person.java");
+
+        verifyGeneratedFileContents(compilation, "interfaces.PersonUnderlying",
+            "samples/sample6/expected/interfaces/PersonUnderlying.java");
+
+        verifyGeneratedFileContents(compilation, "interfaces.PersonFactory",
+            "samples/sample6/expected/interfaces/PersonFactory.java");
+    }
+
     private void verifyGeneratedFileContents(Compilation compilation, String generatedSourceQualifiedName,
         String expectedGeneratedFile) {
         JavaFileObject expectedSrcOfUnderlyingIFace = JavaFileObjects.forResource(expectedGeneratedFile);

@@ -3,6 +3,7 @@ package ppanda.sharpie.tools.interfacewrapper.processors.readers;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -14,10 +15,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import ppanda.sharpie.tools.interfacewrapper.processors.AnnotationExtractionCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.ProcessingComponent;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.LazyTypeConverterBasedTransformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.NameGenerationCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.Transformers;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.TypeConverterBasedTransformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.UnwrapperTransformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.LazyTypeConverterMetaModel;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.Transformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
 
@@ -37,18 +40,30 @@ public class TransformersExtractor extends ProcessingComponent
         String fieldNameOfUnderlyingIFace = getFieldNameOfUnderlyingIFace(sourceInterface);
 
         List<Transformer> returnTypeConverters = getReturnTypeConverters(annotationMirrors, fieldNameOfUnderlyingIFace);
+        List<Transformer> lazyReturnTypeConverters = getLazyReturnTypeConverters(annotationMirrors, fieldNameOfUnderlyingIFace);
         List<Transformer> unwrappers = getUnwrappers(annotationMirrors, fieldNameOfUnderlyingIFace);
 
         return new Transformers(
-            Stream.concat(returnTypeConverters.stream(), unwrappers.stream()).collect(toList()),
+            Stream.of(returnTypeConverters, lazyReturnTypeConverters, unwrappers).flatMap(Collection::stream).collect(toList()),
             fieldNameOfUnderlyingIFace);
+    }
+
+    private List<Transformer> getLazyReturnTypeConverters(Set<AnnotationMirror> annotationMirrors,
+        String fieldNameOfUnderlyingIFace) {
+        return extractFieldFromAll(annotationMirrors, "lazyReturnTypeConverters")
+            .map(LazyTypeConverterMetaModel::new)
+            .sorted(Comparator.comparing(converter -> converter.getQualifiedClassName().toString())) //TODO: Just for ITs, compile-testing:0.18 breaks if order of fields are different
+            .map(converter -> new LazyTypeConverterBasedTransformer(
+                converter,
+                deCapitalize(converter.getOnlyClassNameAsString()),
+                fieldNameOfUnderlyingIFace
+            ))
+            .collect(toList());
     }
 
     private List<Transformer> getReturnTypeConverters(Set<AnnotationMirror> annotationMirrors,
         String fieldNameOfUnderlyingIFace) {
-        return annotationMirrors
-            .stream()
-            .flatMap(mirror -> this.<TypeMirror>extractMultipleValue(mirror, "returnTypeConverters").stream())
+        return extractFieldFromAll(annotationMirrors, "returnTypeConverters")
             .map(TypeConverterMetaModel::new)
             .sorted(Comparator.comparing(converter -> converter.getQualifiedClassName().toString())) //TODO: Just for ITs, compile-testing:0.18 breaks if order of fields are different
             .map(converter -> new TypeConverterBasedTransformer(
@@ -61,9 +76,7 @@ public class TransformersExtractor extends ProcessingComponent
 
     private List<Transformer> getUnwrappers(Set<AnnotationMirror> annotationMirrors,
         String fieldNameOfUnderlyingIFace) {
-        return annotationMirrors
-            .stream()
-            .flatMap(mirror -> this.<TypeMirror>extractMultipleValue(mirror, "unwrapReturnTypesAnnotatedWith").stream())
+        return extractFieldFromAll(annotationMirrors, "unwrapReturnTypesAnnotatedWith")
             .map(clazz -> (Type.ClassType) clazz)
             .map(type -> (TypeElement) type.asElement())
             .flatMap(annotation -> roundEnv().getElementsAnnotatedWith(annotation).stream())
@@ -77,4 +90,9 @@ public class TransformersExtractor extends ProcessingComponent
             .collect(toList());
     }
 
+    private Stream<TypeMirror> extractFieldFromAll(Set<AnnotationMirror> annotationMirrors, String fieldName) {
+        return annotationMirrors
+            .stream()
+            .flatMap(mirror -> this.<TypeMirror>extractMultipleValue(mirror, fieldName).stream());
+    }
 }
