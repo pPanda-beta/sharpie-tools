@@ -4,7 +4,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import java.util.List;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.Transformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers.Transformer;
 
 import static java.util.stream.Collectors.toList;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.MethodUtils.delegatingCallExpr;

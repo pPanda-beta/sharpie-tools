@@ -1,4 +1,4 @@
-package ppanda.sharpie.tools.interfacewrapper.processors.models;
+package ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers;
 
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;

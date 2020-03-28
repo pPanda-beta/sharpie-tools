@@ -15,13 +15,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import ppanda.sharpie.tools.interfacewrapper.processors.AnnotationExtractionCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.ProcessingComponent;
-import ppanda.sharpie.tools.interfacewrapper.processors.generators.LazyTypeConverterBasedTransformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.NameGenerationCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.Transformers;
-import ppanda.sharpie.tools.interfacewrapper.processors.generators.TypeConverterBasedTransformer;
-import ppanda.sharpie.tools.interfacewrapper.processors.generators.UnwrapperTransformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers.LazyTypeConverterBasedTransformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers.Transformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers.TypeConverterBasedTransformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers.UnwrapperTransformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.LazyTypeConverterMetaModel;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.Transformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
 
 import static java.util.stream.Collectors.toList;

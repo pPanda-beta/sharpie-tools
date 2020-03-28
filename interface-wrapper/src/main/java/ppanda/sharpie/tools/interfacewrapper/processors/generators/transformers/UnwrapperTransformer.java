@@ -1,11 +1,10 @@
-package ppanda.sharpie.tools.interfacewrapper.processors.generators;
+package ppanda.sharpie.tools.interfacewrapper.processors.generators.transformers;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.Transformer;
 
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.MethodUtils.delegatingCallExpr;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.MethodUtils.setBodyAsStatement;
