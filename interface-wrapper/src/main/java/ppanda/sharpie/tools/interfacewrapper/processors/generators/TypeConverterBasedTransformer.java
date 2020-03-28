@@ -1,4 +1,4 @@
-package ppanda.sharpie.tools.interfacewrapper.processors.models;
+package ppanda.sharpie.tools.interfacewrapper.processors.generators;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -9,6 +9,8 @@ import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.Transformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
 
 import static com.github.javaparser.ast.Modifier.Keyword.FINAL;
 import static com.github.javaparser.ast.Modifier.Keyword.TRANSIENT;

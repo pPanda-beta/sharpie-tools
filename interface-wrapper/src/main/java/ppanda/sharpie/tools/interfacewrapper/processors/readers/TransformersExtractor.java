@@ -16,10 +16,10 @@ import ppanda.sharpie.tools.interfacewrapper.processors.AnnotationExtractionCapa
 import ppanda.sharpie.tools.interfacewrapper.processors.ProcessingComponent;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.NameGenerationCapability;
 import ppanda.sharpie.tools.interfacewrapper.processors.generators.Transformers;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.TypeConverterBasedTransformer;
+import ppanda.sharpie.tools.interfacewrapper.processors.generators.UnwrapperTransformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.Transformer;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterBasedTransformer;
 import ppanda.sharpie.tools.interfacewrapper.processors.models.TypeConverterMetaModel;
-import ppanda.sharpie.tools.interfacewrapper.processors.models.UnwrapperTransformer;
 
 import static java.util.stream.Collectors.toList;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.deCapitalize;
