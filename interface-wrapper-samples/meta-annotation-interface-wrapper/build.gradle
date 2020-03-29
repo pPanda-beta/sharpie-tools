@@ -12,6 +12,7 @@ repositories {
 }
 
 dependencies {
-    compile project(':interface-wrapper')
+    annotationProcessor project(':interface-wrapper')
+    compileOnly project(':interface-wrapper')
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

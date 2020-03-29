@@ -3,19 +3,29 @@ import org.gradle.internal.jvm.Jvm
 plugins {
     id 'java-library'
     id 'maven-publish'
+    id 'signing'
+    id 'org.ajoberstar.grgit' version '1.7.2'
+    id 'org.ajoberstar.release-opinion' version '1.7.2'
 }
 
 group 'ppanda.sharpie'
-version '1.0-SNAPSHOT'
+ext {
+    artifactName = 'interface-wrapper'
+    binTrayUserName = findProperty("bintrayUserName")
+    bintrayApiToken = findProperty("bintrayApiToken")
+    signingKey = findProperty("signingKey")
+    signingPassword = findProperty("signingPassword")
+}
 
 sourceCompatibility = JavaVersion.VERSION_1_8
 targetCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    compile 'com.google.auto.service:auto-service:1.0-rc2'
-    compile 'com.github.javaparser:javaparser-symbol-solver-core:3.15.14'
-    compile 'com.google.auto:auto-common:0.10'
-    compile files(Jvm.current().toolsJar)
+    annotationProcessor 'com.google.auto.service:auto-service:1.0-rc2'
+    compileOnly 'com.google.auto.service:auto-service:1.0-rc2'
+    api 'com.github.javaparser:javaparser-symbol-solver-core:3.15.14'
+    api 'com.google.auto:auto-common:0.10'
+    api files(Jvm.current().toolsJar)
 
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.10.0'
@@ -23,16 +33,82 @@ dependencies {
     testCompile 'com.google.testing.compile:compile-testing:0.18'
 }
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier "sources"
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             from components.java
-            artifact sourcesJar
+            artifactId = artifactName
+            pom {
+                name = 'Interface Wrapper'
+                description = 'A small library to wrap interfaces with custom needs'
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'ppanda-beta'
+                        name = 'Palash Das'
+                        email = 'dpalash.new@gmail.com'
+                    }
+                }
+            }
+
         }
     }
+
+    repositories {
+        maven {
+            name "jCenter"
+            url = "https://api.bintray.com/maven/${binTrayUserName}/maven/${artifactName}/;publish=1"
+            credentials {
+                username = binTrayUserName
+                password = bintrayApiToken
+            }
+        }
+    }
+}
+
+private void deleteArtifactVersion(versionId, stopOnFail = true) {
+    def artifactLocation = "https://api.bintray.com/packages/${binTrayUserName}/maven/${artifactName}/versions/${versionId}"
+    def basicAuthHeader = "Basic " + Base64.getEncoder().encodeToString((binTrayUserName + ":" + bintrayApiToken).getBytes())
+    def deleteConnection = new URL(artifactLocation).openConnection();
+    deleteConnection.setRequestMethod("DELETE")
+    deleteConnection.setRequestProperty("Authorization", basicAuthHeader)
+    deleteConnection.setDoOutput(true)
+    deleteConnection.getOutputStream().flush()
+    if (deleteConnection.getResponseCode().equals(200)) {
+        println("Successfully deleted artifact " + deleteConnection.getInputStream().getText())
+    } else if (stopOnFail) {
+        throw new StopActionException("Failed to delete artifact " + deleteConnection.getInputStream().getText())
+    }
+}
+
+task removeCurrentVersionIfExists {
+    doFirst {
+        deleteArtifactVersion(version, false)
+    }
+}
+publishMavenJavaPublicationToJCenterRepository.dependsOn(removeCurrentVersionIfExists)
+
+
+task removePoisonousMavenMetadataBasedFakeVersion {
+    doLast {
+        deleteArtifactVersion(artifactName)
+    }
+}
+
+publishMavenJavaPublicationToJCenterRepository.finalizedBy(removePoisonousMavenMetadataBasedFakeVersion)
+
+signing {
+    useInMemoryPgpKeys(signingKey, signingPassword)
+
+    sign publishing.publications.mavenJava
 }
