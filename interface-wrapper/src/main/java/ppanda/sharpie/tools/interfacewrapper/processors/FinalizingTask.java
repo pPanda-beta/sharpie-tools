@@ -22,7 +22,7 @@ public class FinalizingTask extends ProcessingComponent {
             sourceWriter.write(packageAndImports, context.getUnderlyingInterface());
             sourceWriter.write(packageAndImports, context.getFactoryClass());
         } catch (Exception e) {
-            logError("An error occurred ", e);
+//            logError("An error occurred ", e);
         }
     }
 

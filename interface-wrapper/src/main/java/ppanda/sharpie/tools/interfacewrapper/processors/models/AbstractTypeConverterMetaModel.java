@@ -1,56 +1,49 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.models;
 
 import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.ReferenceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.TypeParameter;
+import com.github.javaparser.resolution.declarations.ResolvedClassDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.resolution.types.ResolvedReferenceType;
+import com.github.javaparser.resolution.types.ResolvedType;
+import com.github.javaparser.resolution.types.parametrization.ResolvedTypeParametersMap;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
+import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.util.Name;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaFileObject;
 
-import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.applyResolutions;
-import static ppanda.sharpie.tools.interfacewrapper.processors.utils.JavaParserUtils.buildGenericTypeExtractor;
 import static ppanda.sharpie.tools.interfacewrapper.processors.utils.TypeConversionUtils.isConvertible;
 
 public abstract class AbstractTypeConverterMetaModel {
     private final TypeMirror typeMirror;
-    private final ClassOrInterfaceDeclaration converterClass;
-    private final ClassOrInterfaceType implementationIFace;
-    private Map<TypeParameter, Function<Type, ReferenceType>> genericTypeExtractors;
+    private ResolvedReferenceType implementationIFace;
 
     public AbstractTypeConverterMetaModel(TypeMirror typeMirror) {
         this.typeMirror = typeMirror;
         Symbol.TypeSymbol symbol = ((com.sun.tools.javac.code.Type) typeMirror).asElement();
-        try {
-            JavaFileObject sourcefile = symbol.enclClass().sourcefile;
-            converterClass = StaticJavaParser.parse(sourcefile.openInputStream())
-                .getClassByName(symbol.getSimpleName().toString())
-                .orElseThrow(() -> new RuntimeException("class " + symbol.getQualifiedName() + " not found inside " + sourcefile));
-            implementationIFace = getImplementation();
-            genericTypeExtractors = buildGenericTypeExtractor(converterClass.getTypeParameters(), declaredType());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+        ResolvedClassDeclaration converterClass =
+            tryToResolveAlreadyCompiledClass(symbol)
+                .orElseGet(() -> readFromSourceCode(symbol));
 
-    abstract protected boolean isImplementationIFace(ClassOrInterfaceType implementation);
-
-    private ClassOrInterfaceType getImplementation() {
-        return converterClass
-            .getImplementedTypes()
+        implementationIFace = converterClass
+            .getAllInterfaces()
             .stream()
             .filter(this::isImplementationIFace)
             .findFirst()
             .get();
     }
+
+    abstract protected boolean isImplementationIFace(ResolvedReferenceType iFace);
 
     public String getOnlyClassNameAsString() {
         return ((com.sun.tools.javac.code.Type) typeMirror)
@@ -65,36 +58,65 @@ public abstract class AbstractTypeConverterMetaModel {
     }
 
     public String getOriginalType(Type requestedDeclaredType) {
-        Map<TypeParameter, ReferenceType> genericTypeResolutions = genericTypeExtractors.entrySet()
-            .stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().apply(requestedDeclaredType)));
-
-        Type typeWithResolutions = applyResolutions(originalType(), genericTypeResolutions);
-
-        //TODO: Hack to resolve qualified names
-        typeWithResolutions.setParentNode(requestedDeclaredType.findCompilationUnit()
-            .get()
-            .clone());
-        return typeWithResolutions.resolve().describe();
+        ResolvedType resolvedRequestedType = requestedDeclaredType.resolve();
+        return Substitutions.infer(declaredType(), resolvedRequestedType)
+            .applyOn(originalType())
+            .describe();
     }
 
     public boolean supportsDeclaredType(Type requestedDeclaredType) {
-        Type declaredType = declaredType();
-
-        return isConvertible(requestedDeclaredType, declaredType);
+        ResolvedType resolvedDeclaredType = declaredType();
+        ResolvedType resolvedRequestedType = requestedDeclaredType.resolve();
+        return isConvertible(resolvedRequestedType.asReferenceType(), resolvedDeclaredType.asReferenceType());
     }
 
-    private Type declaredType() {
-        return typeArguments().get(0);
+    abstract protected ResolvedType declaredType();
+
+    abstract protected ResolvedType originalType();
+
+    protected ResolvedTypeParametersMap typeArguments() {
+        return implementationIFace.typeParametersMap();
     }
 
-    private Type originalType() {
-        return typeArguments().get(1);
+    //TODO: Dirty util, should move to reader/extractor
+    private static Optional<ResolvedClassDeclaration> tryToResolveAlreadyCompiledClass(
+        Symbol.TypeSymbol symbol) {
+        String qualifiedNameOfConverterClass = symbol.getQualifiedName().toString();
+
+        TypeSolver typeSolver = getGlobalTypeSolver();
+        SymbolReference<ResolvedReferenceTypeDeclaration> result = typeSolver.tryToSolveType(qualifiedNameOfConverterClass);
+        return result.isSolved() ?
+            Optional.of(result.getCorrespondingDeclaration().asClass())
+            : Optional.empty();
     }
 
-    private NodeList<Type> typeArguments() {
-        return implementationIFace.getTypeArguments()
-            .get();
+    //TODO: Dirty util, should move to reader/extractor
+    private static ResolvedClassDeclaration readFromSourceCode(Symbol.TypeSymbol symbol) {
+        try {
+            JavaFileObject sourcefile = symbol.enclClass().sourcefile;
+            return StaticJavaParser.parse(sourcefile.openInputStream())
+                .getClassByName(symbol.getSimpleName().toString())
+                .orElseThrow(() -> new RuntimeException("class " + symbol.getQualifiedName() + " not found inside " + sourcefile))
+                .resolve()
+                .asClass();
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    //TODO: Dirty util and static injection
+    private static TypeSolver getGlobalTypeSolver() {
+        try {
+            JavaSymbolSolver solver1 = (JavaSymbolSolver) StaticJavaParser.getConfiguration()
+                .getSymbolResolver().get();
+
+            Field field = JavaSymbolSolver.class.getDeclaredField("typeSolver");
+            field.setAccessible(true);
+            return (TypeSolver) field.get(solver1);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override public boolean equals(Object o) {

@@ -25,7 +25,7 @@ public class TypeConversionUtils {
         return isConvertible(resolvedSubType, resolvedSuperType);
     }
 
-    private static boolean isConvertible(ResolvedReferenceType resolvedSubType,
+    public static boolean isConvertible(ResolvedReferenceType resolvedSubType,
         ResolvedReferenceType resolvedSuperType) {
         boolean eq = isEqualOrSubtypeOf(resolvedSubType, resolvedSuperType);
         boolean hTA = haveConvertibleTypeArgs(resolvedSubType, resolvedSuperType);

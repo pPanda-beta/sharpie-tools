@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
@@ -42,41 +41,40 @@ public class AnnotationTree {
             .collect(Collectors.toList());
     }
 
-    public static AnnotationTree of(Class<?> root,
-        RoundEnvironment roundEnv, ProcessingEnvironment processingEnv) {
+    public static AnnotationTree of(Class<?> root, ProcessingEnvironment processingEnv, LookupMechanism lookup) {
         TypeElement rootElement = processingEnv.getElementUtils()
             .getTypeElement(root.getCanonicalName());
-        return depthFirstVisit(rootElement, roundEnv);
+        return depthFirstVisit(rootElement, lookup);
     }
 
-    private static AnnotationTree depthFirstVisit(TypeElement annotation, RoundEnvironment roundEnv) {
-        return depthFirstVisit(annotation, new HashSet<>(), emptyList(), roundEnv);
+    private static AnnotationTree depthFirstVisit(TypeElement annotation, LookupMechanism lookup) {
+        return depthFirstVisit(annotation, new HashSet<>(), emptyList(), lookup);
     }
 
     private static AnnotationTree depthFirstVisit(TypeElement annotation,
         Set<Element> visited,
-        List<AnnotationMirror> annotationsSoFar, RoundEnvironment roundEnv) {
+        List<AnnotationMirror> annotationsSoFar, LookupMechanism lookup) {
 
         if (visited.contains(annotation)) {
             return null;
         }
         visited.add(annotation);
 
-        Set<ProcessableElement> processableElements = collectProcessableElements(annotation, annotationsSoFar, roundEnv);
+        Set<ProcessableElement> processableElements = collectProcessableElements(annotation, annotationsSoFar, lookup);
 
-        Set<AnnotationTree> children = findChildAnnotations(annotation, roundEnv)
+        Set<AnnotationTree> children = findChildAnnotations(annotation, lookup)
             .stream()
             .map(child -> depthFirstVisit(child, visited,
                 withAnnotationMirrorsOnElement(annotationsSoFar, child, annotation),
-                roundEnv))
+                lookup))
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
         return new AnnotationTree(annotation, children, processableElements);
     }
 
-    private static List<TypeElement> findChildAnnotations(TypeElement annotation, RoundEnvironment roundEnv) {
-        return roundEnv
+    private static List<TypeElement> findChildAnnotations(TypeElement annotation, LookupMechanism lookup) {
+        return lookup
             .getElementsAnnotatedWith(annotation)
             .stream()
             .filter(child -> child instanceof TypeElement)
@@ -87,8 +85,8 @@ public class AnnotationTree {
 
     private static Set<ProcessableElement> collectProcessableElements(TypeElement annotation,
         List<AnnotationMirror> annotationsSoFar,
-        RoundEnvironment roundEnv) {
-        return roundEnv
+        LookupMechanism lookup) {
+        return lookup
             .getElementsAnnotatedWith(annotation)
             .stream()
             .map(element -> new ProcessableElement(element,

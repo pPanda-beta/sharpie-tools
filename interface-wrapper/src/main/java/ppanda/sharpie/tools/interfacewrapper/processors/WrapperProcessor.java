@@ -6,7 +6,11 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.google.auto.service.AutoService;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -21,7 +25,9 @@ import javax.lang.model.element.TypeElement;
 import ppanda.sharpie.tools.annotationutils.AnnotationTree;
 import ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface;
 
-@SupportedAnnotationTypes("ppanda.sharpie.tools.interfacewrapper.annotations.WrapperInterface")
+import static ppanda.sharpie.tools.annotationutils.LookupMechanism.allClassesBasedLookUp;
+
+@SupportedAnnotationTypes("*") //TODO: Meta annotations should be cached on a temp file to prevent running it for all rounds
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 @AutoService(Processor.class)
 public class WrapperProcessor extends AbstractProcessor {
@@ -33,13 +39,20 @@ public class WrapperProcessor extends AbstractProcessor {
         WrappingTask wrappingTask = new WrappingTask(processingEnv, roundEnv);
         FinalizingTask finalizingTask = new FinalizingTask(processingEnv, roundEnv);
 
-        AnnotationTree.of(WrapperInterface.class, roundEnv, processingEnv)
+        Symtab symtab = Symtab.instance(((JavacProcessingEnvironment) processingEnv).getContext());
+        Collection<Symbol.ClassSymbol> classes = new ArrayList<>(symtab
+            .classes
+            .values());
+
+        AnnotationTree.of(WrapperInterface.class, processingEnv, allClassesBasedLookUp(classes))
             .findAllMergedProcessableElements()
             .stream()
             .filter(processableElement -> isAnInterface(processableElement.getElement()))
             .map(wrappingTask::perform)
             .forEach(finalizingTask::perform);
-        return true;
+
+        //When we are consuming @SupportedAnnotationTypes("*"), give all chances to other annotation processors, hence return false
+        return false;
     }
 
     private boolean isAnInterface(Element element) {
