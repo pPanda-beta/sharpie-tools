@@ -1,13 +1,15 @@
 package ppanda.sharpie.tools.interfacewrapper.processors.models;
 
+import com.github.javaparser.resolution.declarations.ResolvedClassDeclaration;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
 import javax.lang.model.type.TypeMirror;
 
 public class TypeConverterMetaModel extends AbstractTypeConverterMetaModel {
 
-    public TypeConverterMetaModel(TypeMirror typeMirror) {
-        super(typeMirror);
+    public TypeConverterMetaModel(TypeMirror typeMirror,
+        ResolvedClassDeclaration converterClass) {
+        super(typeMirror, converterClass);
     }
 
     @Override protected boolean isImplementationIFace(ResolvedReferenceType iFace) {
