@@ -6,6 +6,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.google.auto.service.AutoService;
+import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
@@ -16,6 +17,8 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import ppanda.sharpie.tools.javaparser.typesolvers.JavacClassReaderTypeSolver;
+import ppanda.sharpie.tools.javaparser.typesolvers.JavacSourceFileTypeSolver;
 
 @SupportedAnnotationTypes("*") //TODO: Meta annotations should be cached on a temp file to prevent running it for all rounds
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
@@ -51,6 +54,10 @@ public class WrapperProcessor extends AbstractProcessor {
 
         JavacProcessingEnvironment env = (JavacProcessingEnvironment) processingEnv;
         solver.add(new ClassLoaderTypeSolver(env.getProcessorClassLoader()));
+
+        Symtab symtab = Symtab.instance(((JavacProcessingEnvironment) processingEnv).getContext());
+        solver.add(new JavacSourceFileTypeSolver(symtab.classes.values()));
+        solver.add(new JavacClassReaderTypeSolver(symtab.classes.values()));
 
         StaticJavaParser.getConfiguration()
             .setSymbolResolver(new JavaSymbolSolver(solver));

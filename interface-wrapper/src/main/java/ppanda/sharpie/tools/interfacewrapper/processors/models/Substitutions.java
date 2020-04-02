@@ -3,8 +3,11 @@ package ppanda.sharpie.tools.interfacewrapper.processors.models;
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration;
 import com.github.javaparser.resolution.types.ResolvedReferenceType;
 import com.github.javaparser.resolution.types.ResolvedType;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -59,6 +62,8 @@ class Substitutions {
 
     private static Map<ResolvedTypeParameterDeclaration, ResolvedType> getTypeParamMap(ResolvedType template) {
         return template.asReferenceType().getTypeParametersMap()
-            .stream().collect(toMap(pair -> pair.a, pair -> pair.b));
+            .stream().collect(toMap(pair -> pair.a, pair -> pair.b, (x, y) -> x,
+                //TODO: some implementation of ResolvedTypeParameterDeclaration, like JavassistTypeParameter doesn't have hashCode
+                () -> new TreeMap<>(Comparator.comparing(Objects::toString))));
     }
 }
